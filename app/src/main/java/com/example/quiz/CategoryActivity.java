@@ -11,6 +11,8 @@ import android.widget.GridView;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.quiz.SplashActivity.catList;
+
 public class CategoryActivity extends AppCompatActivity {
 
     private GridView catGrid;
@@ -27,16 +29,7 @@ public class CategoryActivity extends AppCompatActivity {
 
         catGrid = findViewById(R.id.catGridView);
 
-        List<String> catList = new ArrayList<>();
 
-        catList.add("Music");
-        catList.add("Film");
-        catList.add("Cricket");
-        catList.add("Football");
-        catList.add("Animals");
-        catList.add("Food");
-        catList.add("Video Game");
-        catList.add("History");
 
         CatGridAdapter adapter = new CatGridAdapter(catList);
         catGrid.setAdapter(adapter);

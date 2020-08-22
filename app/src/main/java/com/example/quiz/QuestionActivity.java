@@ -1,8 +1,10 @@
 package com.example.quiz;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.animation.Animator;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -10,13 +12,25 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.example.quiz.SetsActivity.category_id;
 
 public class QuestionActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -26,6 +40,9 @@ public class QuestionActivity extends AppCompatActivity implements View.OnClickL
     private int quesNum;
     private CountDownTimer countDown;
     private  int score;
+    private FirebaseFirestore firestore;
+    private int setNo;
+    private Dialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +63,16 @@ public class QuestionActivity extends AppCompatActivity implements View.OnClickL
         option3.setOnClickListener(this);
         option4.setOnClickListener(this);
 
+        loadingDialog = new Dialog(QuestionActivity.this);
+        loadingDialog.setContentView(R.layout.loading_progressbar);
+        loadingDialog.setCancelable(false);
+        loadingDialog.getWindow().setBackgroundDrawableResource(R.drawable.progress_background);
+        loadingDialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        loadingDialog.show();
+
+        setNo = getIntent().getIntExtra("SETNO", 1);
+        firestore = FirebaseFirestore.getInstance();
+
         getQuestionsList();
 
         score = 0;
@@ -56,13 +83,36 @@ public class QuestionActivity extends AppCompatActivity implements View.OnClickL
     {
         questionList = new ArrayList<>();
 
-        questionList.add(new Question("Question 1", "A", "B","C","D", 2));
-        questionList.add(new Question("Question 2", "B", "C","D","A", 2));
-        questionList.add(new Question("Question 3", "C", "A","D","B", 2));
-        questionList.add(new Question("Question 4", "D", "B","C","A", 2));
-        questionList.add(new Question("Question 5", "A", "C","B","D", 2));
+        firestore.collection("QUIZ").document("CAT" + String.valueOf(category_id))
+                .collection("SET" + String.valueOf(setNo))
+                .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
 
-        setQuestion();
+                if (task.isSuccessful()) {
+                    QuerySnapshot questions = task.getResult();
+
+                    Log.d("loggggggggggg",String.valueOf(questions.size()));
+                   for (QueryDocumentSnapshot doc : questions){
+                       questionList.add(new Question(doc.getString("QUESTION"),
+                               doc.getString("A"),
+                               doc.getString("B"),
+                               doc.getString("C"),
+                               doc.getString("D"),
+                               Integer.valueOf(doc.getString("ANSWER"))
+                               ));
+                   }
+
+                    setQuestion();
+
+                } else {
+                    Toast.makeText(QuestionActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
+                loadingDialog.cancel();
+            }
+        });
+
 
     }
 
