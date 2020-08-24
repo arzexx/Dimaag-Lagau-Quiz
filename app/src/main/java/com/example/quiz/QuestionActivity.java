@@ -28,6 +28,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.example.quiz.SetsActivity.category_id;
@@ -102,7 +103,7 @@ public class QuestionActivity extends AppCompatActivity implements View.OnClickL
                                Integer.valueOf(doc.getString("ANSWER"))
                                ));
                    }
-
+                    Collections.shuffle(questionList);
                     setQuestion();
 
                 } else {
